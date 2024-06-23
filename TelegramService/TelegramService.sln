@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TelegramService.Api", "TelegramService.Api\TelegramService.Api.csproj", "{B32EAF63-10C0-4070-8E0B-9B59ADABFF5F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TelegramService.Domain", "TelegramService.Domain\TelegramService.Domain.csproj", "{6BCFBBD0-836E-47DC-B532-182EAEC97F18}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TelegramService.TelegramAccess", "TelegramService.TelegramAccess\TelegramService.TelegramAccess.csproj", "{3F96E1F4-A9D3-4508-B4E9-E1F95E22F813}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TelegramService.DataAccess", "TelegramService.DataAccess\TelegramService.DataAccess.csproj", "{910A4593-11C6-4948-8312-5A1C01CC32EB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B32EAF63-10C0-4070-8E0B-9B59ADABFF5F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B32EAF63-10C0-4070-8E0B-9B59ADABFF5F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B32EAF63-10C0-4070-8E0B-9B59ADABFF5F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B32EAF63-10C0-4070-8E0B-9B59ADABFF5F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6BCFBBD0-836E-47DC-B532-182EAEC97F18}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6BCFBBD0-836E-47DC-B532-182EAEC97F18}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6BCFBBD0-836E-47DC-B532-182EAEC97F18}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6BCFBBD0-836E-47DC-B532-182EAEC97F18}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3F96E1F4-A9D3-4508-B4E9-E1F95E22F813}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3F96E1F4-A9D3-4508-B4E9-E1F95E22F813}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3F96E1F4-A9D3-4508-B4E9-E1F95E22F813}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3F96E1F4-A9D3-4508-B4E9-E1F95E22F813}.Release|Any CPU.Build.0 = Release|Any CPU
+		{910A4593-11C6-4948-8312-5A1C01CC32EB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{910A4593-11C6-4948-8312-5A1C01CC32EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{910A4593-11C6-4948-8312-5A1C01CC32EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{910A4593-11C6-4948-8312-5A1C01CC32EB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
