@@ -3,5 +3,5 @@
 public class User
 {
     public Guid UserId { get; set; }
-    public string ChatId { get; set; }
+    public long ChatId { get; set; }
 }

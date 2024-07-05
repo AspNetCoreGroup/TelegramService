@@ -5,7 +5,7 @@ EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
-COPY ["Monitoring.Authorization/Monitoring.Authorization.csproj", "Monitoring.Authorization/"]
+COPY ["TelegramService.Api/TelegramService.Api.csproj", "TelegramService.Api/"]
 RUN dotnet restore "TelegramService.Api/TelegramService.Api.csproj"
 COPY . .
 WORKDIR "/src/Monitoring.Authorization"

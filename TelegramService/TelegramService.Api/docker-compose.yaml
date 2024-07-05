@@ -5,3 +5,14 @@ services:
     container_name: redis_cache
     ports:
       - "6379:6379"
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: 1111
+      POSTGRES_DB: telegramservicedb
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"

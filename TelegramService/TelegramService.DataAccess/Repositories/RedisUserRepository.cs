@@ -4,13 +4,13 @@ using TelegramService.Domain.Abstractions;
 
 namespace TelegramService.DataAccess;
 
-public class UserRepository : IUserRepository
+public class RedisUserRepository : IUserRepository
 {
     private readonly IConnectionMultiplexer _redis;
 
     private const string HashUser = "hashuser";
     
-    public UserRepository(
+    public RedisUserRepository(
         IConnectionMultiplexer redis
         )
     {
@@ -41,6 +41,13 @@ public class UserRepository : IUserRepository
             return null;
             
         return JsonSerializer.Deserialize<User>(plat);
+    }
+
+    public User? GetUserByChatId(long chatId)
+    {
+        var users = GetAllUsers();
+        var user = users.FirstOrDefault(user => user.ChatId == chatId);
+        return user;
     }
 
     public void CreateUser(User user)

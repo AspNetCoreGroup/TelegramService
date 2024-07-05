@@ -22,7 +22,6 @@ builder.WebHost.UseUrls(Environment.GetEnvironmentVariable("TELEGRAMSERVICE_SERV
 //         .Enrich.FromLogContext()
 //         .WriteTo.Console());
 
-
 // Add services to the container.
 var services = builder.Services;
 {
@@ -51,7 +50,10 @@ var services = builder.Services;
 }
 {
     services.AddScoped<ITelegramMessageSender, TelegramMessageSender>();
-    services.AddScoped<IUserRepository, UserRepository>();
+    
+    services.AddDataAccess(Environment.GetEnvironmentVariable("ConnectionStrings__Postgres") ?? 
+                           config.GetConnectionString("TelegramServiceDb") ?? 
+                           throw new Exception("No connection string to sql database"));
 }
 
 
@@ -91,11 +93,11 @@ var app = builder.Build();
             logger.LogInformation($"Received a message from chat ID: {chatId}, Message: {messageText}");
             
             var users = userRepository.GetAllUsers();
-            var user = users.FirstOrDefault(user => user.ChatId == chatId.ToString());
+            var user = users.FirstOrDefault(user => user.ChatId == chatId);
             logger.LogInformation("User {@User}", user);
             
             if (user == default)
-                userRepository.CreateUser(new User(){ ChatId = chatId.ToString(), UserId = Guid.NewGuid() });
+                userRepository.CreateUser(new User(){ ChatId = chatId, UserId = Guid.NewGuid() });
             await t.SendMessageAsync(chatId, "Thank you for your message!");
 
             return StatusCodes.Status200OK;
