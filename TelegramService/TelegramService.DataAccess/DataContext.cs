@@ -3,14 +3,14 @@ using TelegramService.Domain.Entities;
 
 namespace TelegramService.DataAccess;
 
-public class DataContext : DbContext
+public sealed class DataContext : DbContext
 {
     public DbSet<User> Users { get; set; }
     public DbSet<RegistrationCode> RegistrationCodes { get; set; }
 
     public DataContext()
     {
-        
+        Database.EnsureCreated();
     }
         
     public DataContext(DbContextOptions<DataContext> options)

@@ -6,9 +6,12 @@ EXPOSE 443
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 COPY ["TelegramService.Api/TelegramService.Api.csproj", "TelegramService.Api/"]
+COPY ["TelegramService.DataAccess/TelegramService.DataAccess.csproj", "TelegramService.DataAccess/"]
+COPY ["TelegramService.Domain/TelegramService.Domain.csproj", "TelegramService.Domain/"]
+COPY ["TelegramService.TelegramAccess/TelegramService.TelegramAccess.csproj", "TelegramService.TelegramAccess/"]
 RUN dotnet restore "TelegramService.Api/TelegramService.Api.csproj"
 COPY . .
-WORKDIR "/src/Monitoring.Authorization"
+WORKDIR "/src/TelegramService.Api"
 RUN dotnet build "TelegramService.Api.csproj" -c Release -o /app/build
 
 FROM build AS publish

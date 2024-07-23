@@ -1,0 +1,22 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: 1111
+      POSTGRES_DB: telegramservicedb
+    ports:
+      - "5432:5432"
+
+  telegram-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__Postgres=Host=postgres;Database=telegramservicedb;Username=user;Password=1111
+    depends_on:
+      - db
+    ports:
+      - "5010:80"
