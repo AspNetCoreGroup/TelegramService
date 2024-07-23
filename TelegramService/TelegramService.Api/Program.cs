@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
 using StackExchange.Redis;
+using TelegramService.Api.Services;
 using TelegramService.DataAccess;
 using TelegramService.Domain;
 using TelegramService.Domain.Abstractions;
@@ -15,16 +16,12 @@ builder.WebHost.UseUrls(Environment.GetEnvironmentVariable("TELEGRAMSERVICE_SERV
                         config.GetConnectionString("ServiceUrl") ?? 
                         "http://localhost:5010");
 
-// builder.Host
-//     .UseSerilog((context, services, loggerConfiguration) => loggerConfiguration
-//         .ReadFrom.Configuration(context.Configuration)
-//         .ReadFrom.Services(services)
-//         .Enrich.FromLogContext()
-//         .WriteTo.Console());
-
 // Add services to the container.
 var services = builder.Services;
 {
+    services.AddControllers();
+    services.AddEndpointsApiExplorer();
+    
     services
         .AddOptions<TelegramBotConfig>()
         .Bind(config.GetSection(nameof(TelegramBotConfig)))
@@ -50,6 +47,7 @@ var services = builder.Services;
 }
 {
     services.AddScoped<ITelegramMessageSender, TelegramMessageSender>();
+    services.AddScoped<IRegistrationService, RegistrationService>();
     
     services.AddDataAccess(Environment.GetEnvironmentVariable("ConnectionStrings__Postgres") ?? 
                            config.GetConnectionString("TelegramServiceDb") ?? 
@@ -58,6 +56,8 @@ var services = builder.Services;
 
 
 var app = builder.Build();
+
+app.Services.Migrate();
 
 {
     if (app.Environment.IsDevelopment())
@@ -69,50 +69,20 @@ var app = builder.Build();
             c.RoutePrefix = string.Empty;
         });
     }
-
-    app.MapPost("/send-message", async (ITelegramMessageSender telegramMessageSender, string message) =>
-        {
-            const long chatId = -1001746524212;
-            var isOk = await telegramMessageSender.SendMessageAsync(chatId, message);
-            return isOk ? StatusCodes.Status200OK : StatusCodes.Status502BadGateway;
-        })
-        .WithName("SendMessageInTelegram")
-        .WithOpenApi();
+    
     app.MapPost("/update", async (
-            ILogger<TelegramMessageSender> logger,
-            IUserRepository userRepository,
-            ITelegramMessageSender t,
+            IRegistrationService registrationService,
+            ITelegramMessageSender telegramMessageSender,
             [FromBody] TelegramUpdate update) =>
         {
-            // if (update?.Message == null) 
-            //     return StatusCodes.Status400BadRequest;
-            
-            var chatId = update.Message.Chat.Id;
-            var messageText = update.Message.Text;
-            
-            logger.LogInformation($"Received a message from chat ID: {chatId}, Message: {messageText}");
-            
-            var users = userRepository.GetAllUsers();
-            var user = users.FirstOrDefault(user => user.ChatId == chatId);
-            logger.LogInformation("User {@User}", user);
-            
-            if (user == default)
-                userRepository.CreateUser(new User(){ ChatId = chatId, UserId = Guid.NewGuid() });
-            await t.SendMessageAsync(chatId, "Thank you for your message!");
-
+            var messageToUser = await registrationService.TryRegister(update);
+            await telegramMessageSender.SendMessageAsync(update.Message.Chat.Id, messageToUser);
             return StatusCodes.Status200OK;
         })
         .WithName("BotUpdate")
         .WithOpenApi();
-    app.MapGet("/all-users", (
-            ILogger<TelegramMessageSender> logger,
-            IUserRepository userRepository) =>
-        {
-            var users = userRepository.GetAllUsers();
-            return users;
-        })
-        .WithName("GetAllUsers")
-        .WithOpenApi();
 
+    app.MapControllers();
+    
     app.Run();
 }

@@ -23,10 +23,8 @@ public class NotificationController : ControllerBase
         _telegramMessageSender = telegramMessageSender;
     }
     
-    
-    
-    [HttpPost("{userId:guid}/code/{code}")]
-    public async Task<ActionResult> AddRegisterCodeToUser(
+    [HttpPost("user/{userId:guid}")]
+    public async Task<ActionResult> NotifyUser(
         Guid userId,
         [FromBody]NotificationRequest request)
     {

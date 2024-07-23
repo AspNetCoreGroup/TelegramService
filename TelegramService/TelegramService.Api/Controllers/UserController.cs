@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Text.Json;
+using Microsoft.AspNetCore.Mvc;
 using TelegramService.DataAccess;
 using TelegramService.Domain.Abstractions;
 using TelegramService.Domain.Abstractions.Repositories;
@@ -32,15 +33,25 @@ public class UserController : ControllerBase
     public async Task<ActionResult> AddRegisterCodeToUser(
         Guid userId, string code)
     {
-        var registrationCode = new RegistrationCode(){ UserId = userId, Code = code, CreationDateTime = DateTime.Now};
+        var registrationCode = new RegistrationCode(){ UserId = userId, Code = code, CreationDateTime = DateTime.Now.ToUniversalTime()};
         _registrationCodeRepository.AddCode(registrationCode);
         
         return Ok();
     }
 
-    [HttpPost("/update")]
+    [HttpPost("update")]
     public async Task<ActionResult> MessageFromBot([FromBody] TelegramUpdate update)
+    // public async Task<ActionResult> MessageFromBot()
     {
+        // var body = Request.Body;
+        // StreamReader reader = new StreamReader(body);
+        // string text = await reader.ReadToEndAsync();
+        // _logger.LogDebug(text);
+        // var update = await JsonSerializer.DeserializeAsync<TelegramUpdate>(body);
+        //
+        // if (update is null)
+        //     return Ok();
+        //
         var chatId = update.Message.Chat.Id;
         var messageText = update.Message.Text;
             
@@ -57,7 +68,7 @@ public class UserController : ControllerBase
         }
         
         var user = _userRepository.GetUserById(userIdFromCode.Value);
-        _logger.LogInformation("User {@User}", user);
+        _logger.LogDebug("User {@User}", user);
 
         string messageToUser;
         if (user == default)
