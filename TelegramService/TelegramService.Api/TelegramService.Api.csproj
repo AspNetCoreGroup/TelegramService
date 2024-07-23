@@ -23,6 +23,7 @@
     <ItemGroup>
       <ProjectReference Include="..\TelegramService.DataAccess\TelegramService.DataAccess.csproj" />
       <ProjectReference Include="..\TelegramService.Domain\TelegramService.Domain.csproj" />
+      <ProjectReference Include="..\TelegramService.MessageBrokerAccess\TelegramService.MessageBrokerAccess.csproj" />
       <ProjectReference Include="..\TelegramService.TelegramAccess\TelegramService.TelegramAccess.csproj" />
     </ItemGroup>
 

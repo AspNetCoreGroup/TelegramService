@@ -8,6 +8,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TelegramService.TelegramAcc
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TelegramService.DataAccess", "TelegramService.DataAccess\TelegramService.DataAccess.csproj", "{910A4593-11C6-4948-8312-5A1C01CC32EB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TelegramService.MessageBrokerAccess", "TelegramService.MessageBrokerAccess\TelegramService.MessageBrokerAccess.csproj", "{C6D3A93B-0BBB-4837-9341-A344561870D8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +32,9 @@ Global
 		{910A4593-11C6-4948-8312-5A1C01CC32EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{910A4593-11C6-4948-8312-5A1C01CC32EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{910A4593-11C6-4948-8312-5A1C01CC32EB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C6D3A93B-0BBB-4837-9341-A344561870D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C6D3A93B-0BBB-4837-9341-A344561870D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C6D3A93B-0BBB-4837-9341-A344561870D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C6D3A93B-0BBB-4837-9341-A344561870D8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

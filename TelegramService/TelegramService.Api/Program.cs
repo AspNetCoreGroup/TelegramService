@@ -7,6 +7,7 @@ using TelegramService.DataAccess;
 using TelegramService.Domain;
 using TelegramService.Domain.Abstractions;
 using TelegramService.Domain.Settings;
+using TelegramService.MessageBrokerAccess;
 using TelegramService.TelegramAccess;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -52,6 +53,7 @@ var services = builder.Services;
     services.AddDataAccess(Environment.GetEnvironmentVariable("ConnectionStrings__Postgres") ?? 
                            config.GetConnectionString("TelegramServiceDb") ?? 
                            throw new Exception("No connection string to sql database"));
+    services.AddMessageBroker("");
 }
 
 

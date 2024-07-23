@@ -9,6 +9,7 @@ COPY ["TelegramService.Api/TelegramService.Api.csproj", "TelegramService.Api/"]
 COPY ["TelegramService.DataAccess/TelegramService.DataAccess.csproj", "TelegramService.DataAccess/"]
 COPY ["TelegramService.Domain/TelegramService.Domain.csproj", "TelegramService.Domain/"]
 COPY ["TelegramService.TelegramAccess/TelegramService.TelegramAccess.csproj", "TelegramService.TelegramAccess/"]
+COPY ["TelegramService.MessageBrokerAccess/TelegramService.MessageBrokerAccess.csproj", "TelegramService.MessageBrokerAccess/"]
 RUN dotnet restore "TelegramService.Api/TelegramService.Api.csproj"
 COPY . .
 WORKDIR "/src/TelegramService.Api"

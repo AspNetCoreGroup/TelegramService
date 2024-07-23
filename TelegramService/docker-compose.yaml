@@ -9,6 +9,15 @@ services:
     ports:
       - "5432:5432"
 
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
   telegram-service:
     build:
       context: .
@@ -18,5 +27,6 @@ services:
       - ConnectionStrings__Postgres=Host=postgres;Database=telegramservicedb;Username=user;Password=1111
     depends_on:
       - db
+      - rabbitmq
     ports:
       - "5010:80"
