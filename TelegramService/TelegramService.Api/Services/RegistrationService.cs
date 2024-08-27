@@ -27,8 +27,13 @@ public class RegistrationService : IRegistrationService
         _userRepository = userRepository;
     }
     
-    public async Task<string> TryRegister(TelegramUpdate update)
+    public async Task<string> TryRegister(TelegramUpdate? update)
     {
+        if (update is null)
+        {
+            _logger.LogError("Bad update telegram message");
+        }
+        
         var chatId = update.Message.Chat.Id;
         var messageText = update.Message.Text;
             

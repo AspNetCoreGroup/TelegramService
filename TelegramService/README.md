@@ -1,6 +1,6 @@
 # TelegramService
 
-Для тестов 
+## Для тестов
 
 ngrok http http://localhost:5010
 
@@ -8,8 +8,12 @@ curl -F "url=https://your-ngrok-url.ngrok.io/api/update" https://api.telegram.or
 
 https://dashboard.ngrok.com/get-started/setup/windows
 
+## Миграции
 
-Для миграций
-
+```cmd
 dotnet ef migrations add MigrationName --startup-project TelegramService.Api --project TelegramService.DataAccess --context DataContext
+```
+
+```cmd
 dotnet ef database update --startup-project TelegramService.Api --project TelegramService.DataAccess --context DataContext
+```

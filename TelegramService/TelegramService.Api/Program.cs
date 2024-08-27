@@ -28,6 +28,13 @@ var services = builder.Services;
         .Bind(config.GetSection(nameof(TelegramBotConfig)))
         .Validate(x => !string.IsNullOrWhiteSpace(x.BotToken))
         .ValidateOnStart();
+
+    // var configR = config.GetSection(nameof(RabbitMqConfiguration)).Get<RabbitMqConfiguration>();
+
+    services
+        .AddOptions<RabbitMqConfiguration>()
+        .Bind(config.GetSection(nameof(RabbitMqConfiguration)));
+    
     services.AddHttpClient(Clients.TelegramBotClientName, client =>
     {
         client.BaseAddress = new Uri(Environment.GetEnvironmentVariable("TELEGRAMBOT_URL") ??
@@ -53,7 +60,7 @@ var services = builder.Services;
     services.AddDataAccess(Environment.GetEnvironmentVariable("ConnectionStrings__Postgres") ?? 
                            config.GetConnectionString("TelegramServiceDb") ?? 
                            throw new Exception("No connection string to sql database"));
-    services.AddMessageBroker("");
+    services.AddMessageBroker();
 }
 
 

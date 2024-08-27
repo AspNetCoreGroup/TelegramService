@@ -14,9 +14,6 @@ namespace TelegramService.MessageBrokerAccess;
 public class RabbitMqListener : BackgroundService
 {
     private readonly ILogger<RabbitMqListener> _logger;
-    // private readonly ITelegramMessageSender _telegramMessageSender;
-    // private readonly IUserRepository _userRepository;
-    // private readonly IBrokerSender _brokerSender;
     private readonly IServiceScopeFactory _serviceScopeFactory;
 
     private readonly IConnection _connection;
@@ -24,24 +21,29 @@ public class RabbitMqListener : BackgroundService
 
     public RabbitMqListener(
         ILogger<RabbitMqListener> logger,
-        // ITelegramMessageSender telegramMessageSender,
-        // IUserRepository userRepository,
-        // IBrokerSender brokerSender,
         IServiceScopeFactory serviceScopeFactory
         )
     {
         _logger = logger;
-        // _telegramMessageSender = telegramMessageSender;
-        // _userRepository = userRepository;
-        // _brokerSender = brokerSender;
         _serviceScopeFactory = serviceScopeFactory;
 
+        // var factory = new ConnectionFactory() { HostName = "localhost" };
+        var uri = Environment.GetEnvironmentVariable("ConnectionStrings__RabbitMQ");
+
+        if (uri is null)
+        {
+            // TODO
+            // _logger.LogCritical("lkasjd");
+            uri = "amqp://guest:guest@localhost:5672";
+        }
+        
+        // var factory = new ConnectionFactory() { Uri = new Uri(uri) };
         var factory = new ConnectionFactory() { HostName = "localhost" };
         _connection = factory.CreateConnection();
         _channel = _connection.CreateModel();
 
         _channel.QueueDeclare(
-            queue: "test_queue",
+            queue: "monitoring_out_queue",
             durable: false,
             exclusive: false,
             autoDelete: false,
@@ -65,7 +67,7 @@ public class RabbitMqListener : BackgroundService
             await ProcessMessage(message);
         };
         _channel.BasicConsume(
-            queue: "test_queue",
+            queue: "monitoring_out_queue",
             autoAck: true,
             consumer: consumer);
 
@@ -75,20 +77,30 @@ public class RabbitMqListener : BackgroundService
     private async Task ProcessMessage(string messageString)
     {
         _logger.LogInformation("Received From MessageBroker {Message}", messageString);
-        
-        
 
-        var message = JsonSerializer.Deserialize<EventsMessage>(messageString);
+        EventsMessage? message;
+        try
+        {
+            message = JsonSerializer.Deserialize<EventsMessage>(messageString);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Error while Deserialize messageString from broker");
+            return;
+        }
+        
+        if (message is null)
+            return;
 
         using var scope = _serviceScopeFactory.CreateScope();
-        var _userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
-        var _telegramMessageSender = scope.ServiceProvider.GetRequiredService<ITelegramMessageSender>();
-        var _brokerSender = scope.ServiceProvider.GetRequiredService<IBrokerSender>();
+        var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+        var telegramMessageSender = scope.ServiceProvider.GetRequiredService<ITelegramMessageSender>();
+        var brokerSender = scope.ServiceProvider.GetRequiredService<IBrokerSender>();
         
         foreach (var messageEvent in message.Events)
         {
             var userId = new Guid(messageEvent.UserId);
-            var user = _userRepository.GetUserById(userId);
+            var user = userRepository.GetUserById(userId);
 
             if (user is null)
             {
@@ -98,7 +110,7 @@ public class RabbitMqListener : BackgroundService
 
             var notification = CreateNotificationMessage(messageEvent.Type, messageEvent.MessageParams);
             
-            var isOk = await _telegramMessageSender.SendMessageAsync(user.ChatId, notification);
+            var isOk = await telegramMessageSender.SendMessageAsync(user.ChatId, notification);
 
             if (!isOk)
             {
@@ -106,7 +118,8 @@ public class RabbitMqListener : BackgroundService
                 continue;
             }
 
-            await _brokerSender.SendMessage("Ok eventId");
+            // TODO
+            // await _brokerSender.SendMessage("Ok eventId");
         }
     }
 
