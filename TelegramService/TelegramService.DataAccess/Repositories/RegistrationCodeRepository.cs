@@ -13,7 +13,7 @@ public class RegistrationCodeRepository : IRegistrationCodeRepository
         _dataContext = dataContext;
     }
     
-    public IEnumerable<RegistrationCode> GetCodesForUser(Guid userId)
+    public IEnumerable<RegistrationCode> GetCodesForUser(int userId)
     {
         var codesForUser = _dataContext.RegistrationCodes
             .Where(code => code.UserId == userId)
@@ -22,7 +22,7 @@ public class RegistrationCodeRepository : IRegistrationCodeRepository
         return codesForUser;
     }
 
-    public RegistrationCode? GetLastCodeForUser(Guid userId)
+    public RegistrationCode? GetLastCodeForUser(int userId)
     {
         var lastCode = _dataContext.RegistrationCodes
             .Where(code => code.UserId == userId)
@@ -32,7 +32,7 @@ public class RegistrationCodeRepository : IRegistrationCodeRepository
         return lastCode;
     }
     
-    public Guid? GetUserIdFromCode(string code)
+    public int? GetUserIdFromCode(string code)
     {
         var userId = _dataContext.RegistrationCodes
             .FirstOrDefault(x => x.Code == code)?.UserId;

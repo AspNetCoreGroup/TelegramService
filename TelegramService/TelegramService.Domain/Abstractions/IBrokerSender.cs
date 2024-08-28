@@ -1,6 +1,9 @@
-﻿namespace TelegramService.Domain.Abstractions;
+﻿using TelegramService.Domain.Models;
+
+namespace TelegramService.Domain.Abstractions;
 
 public interface IBrokerSender
 {
-    Task SendMessage(string message);
+    Task SendMessageStatus(MessageStatus messageStatus);
+    Task SendRegistrationStatus(UserTelegramChatRegistration registration);
 }

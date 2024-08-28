@@ -1,7 +1,9 @@
 ﻿using System.Text;
+using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using TelegramService.Domain.Abstractions;
+using TelegramService.Domain.Models;
 
 namespace TelegramService.MessageBrokerAccess;
 
@@ -11,6 +13,9 @@ public class RabbitMqSender : IBrokerSender, IDisposable
     
     private readonly IConnection _connection;
     private readonly IModel _channel;
+    
+    private const string GetStatusQueue = "telegram_get_message_status_queue";
+    private const string GetRegistrationQueue = "telegram_get_registration_queue";
 
     public RabbitMqSender(ILogger<RabbitMqSender> logger)
     {
@@ -31,27 +36,23 @@ public class RabbitMqSender : IBrokerSender, IDisposable
         // };
         
         var uri = Environment.GetEnvironmentVariable("ConnectionStrings__RabbitMQ");
+        
+        // _logger.LogInformation("Broker uri: {Uri}", uri);
 
         if (uri is null)
         {
-            // TODO
-            // _logger.LogCritical("lkasjd");
-            uri = "amqp://guest:guest@rabbitmq:5672";
+            _logger.LogCritical("No uri for telegram rabbitmq");
+            throw new Exception("No uri for telegram rabbitmq");
         }
         
-        // var factory = new ConnectionFactory() { Uri = new Uri(uri) };
-        var factory = new ConnectionFactory() { HostName = "localhost" };
+        var factory = new ConnectionFactory() { Uri = new Uri(uri) };
+        // var factory = new ConnectionFactory() { HostName = "localhost" };
         
         _connection = factory.CreateConnection();
         _channel = _connection.CreateModel();
-
-        // queue: "monitoring_in_queue",
-        _channel.QueueDeclare(
-            queue: "monitoring_out_queue",
-            durable: false,
-            exclusive: false,
-            autoDelete: false,
-            arguments: null);
+        
+        _channel.QueueDeclare(queue: GetStatusQueue, durable: false, exclusive: false, autoDelete: false, arguments: null);
+        _channel.QueueDeclare(queue: GetRegistrationQueue, durable: false, exclusive: false, autoDelete: false, arguments: null);
     }
     
     public void Dispose()
@@ -60,12 +61,26 @@ public class RabbitMqSender : IBrokerSender, IDisposable
         _connection.Close();
     }
     
-    public Task SendMessage(string message)
+    public Task SendMessageStatus(MessageStatus messageStatus)
     {
+        var message = JsonSerializer.Serialize(messageStatus);
         var body = Encoding.UTF8.GetBytes(message);
 
         _channel.BasicPublish(exchange: "",
-            routingKey: "monitoring_out_queue",
+            routingKey: GetStatusQueue,
+            basicProperties: null,
+            body: body);
+
+        return Task.CompletedTask;
+    }
+
+    public Task SendRegistrationStatus(UserTelegramChatRegistration registration)
+    {
+        var message = JsonSerializer.Serialize(registration);
+        var body = Encoding.UTF8.GetBytes(message);
+
+        _channel.BasicPublish(exchange: "",
+            routingKey: GetRegistrationQueue,
             basicProperties: null,
             body: body);
 

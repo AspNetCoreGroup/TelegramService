@@ -22,7 +22,7 @@ public class UserController : ControllerBase
     
     [HttpPost("{userId:guid}/code/{code}")]
     public async Task<ActionResult> AddRegisterCodeToUser(
-        Guid userId, string code)
+        int userId, string code)
     {
         var registrationCode = new RegistrationCode(){ UserId = userId, Code = code, CreationDateTime = DateTime.Now.ToUniversalTime()};
         _registrationCodeRepository.AddCode(registrationCode);

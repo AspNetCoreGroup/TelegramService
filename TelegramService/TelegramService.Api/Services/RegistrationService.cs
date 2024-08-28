@@ -1,6 +1,7 @@
-﻿using TelegramService.DataAccess;
-using TelegramService.Domain.Abstractions;
+﻿using TelegramService.Domain.Abstractions;
 using TelegramService.Domain.Abstractions.Repositories;
+using TelegramService.Domain.Entities;
+using TelegramService.Domain.Models;
 using TelegramService.TelegramAccess;
 
 namespace TelegramService.Api.Services;
@@ -15,16 +16,19 @@ public class RegistrationService : IRegistrationService
     private readonly ILogger<RegistrationService> _logger;
     private readonly IRegistrationCodeRepository _registrationCodeRepository;
     private readonly IUserRepository _userRepository;
+    private readonly IBrokerSender _brokerSender;
 
     public RegistrationService(
         ILogger<RegistrationService> logger,
         IRegistrationCodeRepository registrationCodeRepository,
-        IUserRepository userRepository
+        IUserRepository userRepository,
+        IBrokerSender brokerSender
         )
     {
         _logger = logger;
         _registrationCodeRepository = registrationCodeRepository;
         _userRepository = userRepository;
+        _brokerSender = brokerSender;
     }
     
     public async Task<string> TryRegister(TelegramUpdate? update)
@@ -56,6 +60,8 @@ public class RegistrationService : IRegistrationService
         if (user == default)
         {
             _userRepository.CreateUser(new User(){ ChatId = chatId, UserId = userIdFromCode.Value });
+            await _brokerSender.SendRegistrationStatus(new UserTelegramChatRegistration() 
+                { TelegramChatId = chatId, UserId = userIdFromCode.Value });
             messageToUser = "Чат успешно привязан к пользователю";
         }
         else

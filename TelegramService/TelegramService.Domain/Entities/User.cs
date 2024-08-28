@@ -1,7 +1,7 @@
-﻿namespace TelegramService.DataAccess;
+﻿namespace TelegramService.Domain.Entities;
 
 public class User
 {
-    public Guid UserId { get; set; }
+    public int UserId { get; set; }
     public long ChatId { get; set; }
 }

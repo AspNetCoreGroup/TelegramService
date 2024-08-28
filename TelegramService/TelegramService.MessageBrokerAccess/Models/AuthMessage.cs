@@ -8,8 +8,9 @@ public class AuthMessage
 
 public class AuthUser
 {
-    public string UserId { get; set; }
-    public string UserFullName { get; set; }
-    public string TelegramId { get; set; }
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public string Telegram { get; set; }
     public string Email { get; set; }
+    public long TelegramChatId { get; set; }
 }

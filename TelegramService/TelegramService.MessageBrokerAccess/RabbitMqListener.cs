@@ -3,10 +3,12 @@ using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Primitives;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using TelegramService.Domain.Abstractions;
+using TelegramService.Domain.Abstractions.Repositories;
+using TelegramService.Domain.Entities;
+using TelegramService.Domain.Models;
 using TelegramService.MessageBrokerAccess.Models;
 
 namespace TelegramService.MessageBrokerAccess;
@@ -18,6 +20,9 @@ public class RabbitMqListener : BackgroundService
 
     private readonly IConnection _connection;
     private readonly IModel _channel;
+    
+    private const string SendEventQueue = "telegram_send_message_queue";
+    private const string SendRegistrationQueue = "telegram_send_message_queue";
 
     public RabbitMqListener(
         ILogger<RabbitMqListener> logger,
@@ -26,28 +31,22 @@ public class RabbitMqListener : BackgroundService
     {
         _logger = logger;
         _serviceScopeFactory = serviceScopeFactory;
-
-        // var factory = new ConnectionFactory() { HostName = "localhost" };
+        
         var uri = Environment.GetEnvironmentVariable("ConnectionStrings__RabbitMQ");
 
         if (uri is null)
         {
-            // TODO
-            // _logger.LogCritical("lkasjd");
-            uri = "amqp://guest:guest@localhost:5672";
+            _logger.LogCritical("No uri for telegram rabbitmq");
+            throw new Exception("No uri for telegram rabbitmq");
         }
         
-        // var factory = new ConnectionFactory() { Uri = new Uri(uri) };
-        var factory = new ConnectionFactory() { HostName = "localhost" };
+        var factory = new ConnectionFactory() { Uri = new Uri(uri) };
+        // var factory = new ConnectionFactory() { HostName = "localhost" };
         _connection = factory.CreateConnection();
         _channel = _connection.CreateModel();
 
-        _channel.QueueDeclare(
-            queue: "monitoring_out_queue",
-            durable: false,
-            exclusive: false,
-            autoDelete: false,
-            arguments: null);
+        _channel.QueueDeclare(queue: SendEventQueue, durable: false, exclusive: false, autoDelete: false, arguments: null);
+        _channel.QueueDeclare(queue: SendRegistrationQueue, durable: false, exclusive: false, autoDelete: false, arguments: null);
     }
     
     public override void Dispose()
@@ -59,29 +58,41 @@ public class RabbitMqListener : BackgroundService
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var consumer = new EventingBasicConsumer(_channel);
-        consumer.Received += async (model, ea) =>
+        var eventsConsumer = new EventingBasicConsumer(_channel);
+        eventsConsumer.Received += async (model, ea) =>
         {
             var body = ea.Body.ToArray();
             var message = Encoding.UTF8.GetString(body);
-            await ProcessMessage(message);
+            await ProcessEventMessage(message);
         };
         _channel.BasicConsume(
-            queue: "monitoring_out_queue",
+            queue: SendEventQueue,
             autoAck: true,
-            consumer: consumer);
+            consumer: eventsConsumer);
+        
+        var registrationConsumer = new EventingBasicConsumer(_channel);
+        registrationConsumer.Received += async (model, ea) =>
+        {
+            var body = ea.Body.ToArray();
+            var message = Encoding.UTF8.GetString(body);
+            await ProcessRegistrationMessage(message);
+        };
+        _channel.BasicConsume(
+            queue: SendRegistrationQueue,
+            autoAck: true,
+            consumer: registrationConsumer);
 
         return Task.CompletedTask;
     }
 
-    private async Task ProcessMessage(string messageString)
+    private async Task ProcessEventMessage(string messageString)
     {
         _logger.LogInformation("Received From MessageBroker {Message}", messageString);
-
-        EventsMessage? message;
+        
+        Event? message;
         try
         {
-            message = JsonSerializer.Deserialize<EventsMessage>(messageString);
+            message = JsonSerializer.Deserialize<Event>(messageString);
         }
         catch (Exception e)
         {
@@ -91,35 +102,43 @@ public class RabbitMqListener : BackgroundService
         
         if (message is null)
             return;
-
+        
         using var scope = _serviceScopeFactory.CreateScope();
         var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
         var telegramMessageSender = scope.ServiceProvider.GetRequiredService<ITelegramMessageSender>();
         var brokerSender = scope.ServiceProvider.GetRequiredService<IBrokerSender>();
         
-        foreach (var messageEvent in message.Events)
+        var userId = message.UserId;
+        var user = userRepository.GetUserById(userId);
+        
+        var messageStatus = new MessageStatus
         {
-            var userId = new Guid(messageEvent.UserId);
-            var user = userRepository.GetUserById(userId);
+            MessageId = message.MessageId,
+            IsSuccess = false
+        };
 
-            if (user is null)
-            {
-                _logger.LogError("No user");
-                continue;
-            }
+        if (user is null)
+        {
+            _logger.LogError("No user in db with id {UserId}", userId);
+            await brokerSender.SendMessageStatus(messageStatus);
+            return;
+        }
 
-            var notification = CreateNotificationMessage(messageEvent.Type, messageEvent.MessageParams);
-            
-            var isOk = await telegramMessageSender.SendMessageAsync(user.ChatId, notification);
+        try
+        {
+            var notification = CreateNotificationMessage("Test", message.MessageParams);
 
-            if (!isOk)
-            {
-                _logger.LogError("Not send");
-                continue;
-            }
-
-            // TODO
-            // await _brokerSender.SendMessage("Ok eventId");
+            _logger.LogInformation("Try to send message to user {UserId} with chatId {ChatId}", 
+                user.UserId, user.ChatId);
+            messageStatus.IsSuccess = await telegramMessageSender.SendMessageAsync(user.ChatId, notification);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Error while working with event message from broker");
+        }
+        finally
+        {
+            await brokerSender.SendMessageStatus(messageStatus);
         }
     }
 
@@ -138,5 +157,41 @@ public class RabbitMqListener : BackgroundService
         }
 
         return sb.ToString();
+    }
+    
+    private async Task ProcessRegistrationMessage(string messageString)
+    {
+        _logger.LogInformation("Received From Registration queue: {Message}", messageString);
+        
+        AuthUser? authUser;
+        try
+        {
+            authUser = JsonSerializer.Deserialize<AuthUser>(messageString);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Error while Deserialize messageString from broker");
+            return;
+        }
+        
+        if (authUser is null)
+            return;
+        
+        using var scope = _serviceScopeFactory.CreateScope();
+        var registrationCodeRepository = scope.ServiceProvider.GetRequiredService<IRegistrationCodeRepository>();
+        
+        registrationCodeRepository.AddCode(new RegistrationCode()
+        {
+            UserId = authUser.Id,
+            Code = authUser.Telegram,
+            CreationDateTime = DateTime.Now,
+        });
+        
+        // var brokerSender = scope.ServiceProvider.GetRequiredService<IBrokerSender>();
+        //
+        // await brokerSender.SendRegistrationStatus(new UserTelegramChatRegistration()
+        // {
+        //     
+        // });
     }
 }

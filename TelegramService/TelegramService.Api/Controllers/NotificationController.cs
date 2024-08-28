@@ -30,7 +30,7 @@ public class NotificationController : ControllerBase
     
     [HttpPost("user/{userId:guid}")]
     public async Task<ActionResult> NotifyUser(
-        Guid userId,
+        int userId,
         [FromBody]NotificationRequest request)
     {
         var userInfo = _userRepository.GetUserById(userId);
@@ -54,19 +54,20 @@ public class NotificationController : ControllerBase
     public async Task<ActionResult> SendMessage(
         Guid userId)
     {
-        var events = new EventsMessage
-        {
-            Events = new []
-            {
-                new Event() { UserId = "c78579b0-302e-42d2-a4c9-42f6f0165262", Type = "Error", MessageParams = new []
-                {
-                    new MessageParam() { Name = "Pressure", Value = "1"},
-                    new MessageParam() { Name = "Temperature", Value = "36.6"}
-                }}
-            }
-        };
-        var request = JsonSerializer.Serialize(events);
-        await _brokerSender.SendMessage(request);
+        // TODO
+        // var events = new EventsMessage
+        // {
+        //     Events = new []
+        //     {
+        //         new Event() { UserId = 1, Type = 1, MessageParams = new []
+        //         {
+        //             new MessageParam() { Name = "Pressure", Value = "1"},
+        //             new MessageParam() { Name = "Temperature", Value = "36.6"}
+        //         }}
+        //     }
+        // };
+        // var request = JsonSerializer.Serialize(events);
+        // await _brokerSender.SendMessage(request);
         return Ok();
     }
 }

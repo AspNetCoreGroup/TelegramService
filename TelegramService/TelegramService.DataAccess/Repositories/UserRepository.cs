@@ -1,4 +1,5 @@
 ﻿using TelegramService.Domain.Abstractions;
+using TelegramService.Domain.Entities;
 
 namespace TelegramService.DataAccess.Repositories;
 
@@ -18,7 +19,7 @@ public class UserRepository : IUserRepository
         return allUsers;
     }
 
-    public User? GetUserById(Guid id)
+    public User? GetUserById(int id)
     {
         var user = _dataContext.Users.Find(id);
 
@@ -38,7 +39,7 @@ public class UserRepository : IUserRepository
         _dataContext.SaveChanges();
     }
 
-    public void DeleteUser(Guid id)
+    public void DeleteUser(int id)
     {
         var personToDelete = _dataContext.Users.Find(id);
 

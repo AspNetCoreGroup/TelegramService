@@ -7,8 +7,9 @@ public class EventsMessage
 
 public class Event
 {
-    public string UserId { get; set; }
-    public string Type { get; set; }
+    public int UserId { get; set; }
+    public int Type { get; set; }
+    public long MessageId { get; set; }
     public MessageParam[] MessageParams { get; set; }
 }
 
