@@ -54,7 +54,6 @@ public class NotificationController : ControllerBase
     public async Task<ActionResult> SendMessage(
         Guid userId)
     {
-        // TODO
         // var events = new EventsMessage
         // {
         //     Events = new []

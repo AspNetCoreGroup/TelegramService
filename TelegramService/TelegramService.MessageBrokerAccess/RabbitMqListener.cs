@@ -22,7 +22,7 @@ public class RabbitMqListener : BackgroundService
     private readonly IModel _channel;
     
     private const string SendEventQueue = "telegram_send_message_queue";
-    private const string SendRegistrationQueue = "telegram_send_message_queue";
+    private const string SendRegistrationQueue = "telegram_send_registration_queue";
 
     public RabbitMqListener(
         ILogger<RabbitMqListener> logger,
@@ -38,10 +38,10 @@ public class RabbitMqListener : BackgroundService
         {
             _logger.LogCritical("No uri for telegram rabbitmq");
             throw new Exception("No uri for telegram rabbitmq");
+            // uri = "amqp://guest:guest@localhost:5674/";
         }
         
         var factory = new ConnectionFactory() { Uri = new Uri(uri) };
-        // var factory = new ConnectionFactory() { HostName = "localhost" };
         _connection = factory.CreateConnection();
         _channel = _connection.CreateModel();
 
@@ -179,13 +179,21 @@ public class RabbitMqListener : BackgroundService
         
         using var scope = _serviceScopeFactory.CreateScope();
         var registrationCodeRepository = scope.ServiceProvider.GetRequiredService<IRegistrationCodeRepository>();
-        
-        registrationCodeRepository.AddCode(new RegistrationCode()
+
+        try
         {
-            UserId = authUser.Id,
-            Code = authUser.Telegram,
-            CreationDateTime = DateTime.Now,
-        });
+            registrationCodeRepository.AddCode(new RegistrationCode()
+            {
+                UserId = authUser.Id,
+                Code = authUser.Telegram,
+                CreationDateTime = DateTime.Now.ToUniversalTime()
+            });
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Error to add code to user in db");
+            return;
+        }
         
         // var brokerSender = scope.ServiceProvider.GetRequiredService<IBrokerSender>();
         //

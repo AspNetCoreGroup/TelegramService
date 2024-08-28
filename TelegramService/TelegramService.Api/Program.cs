@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
-using StackExchange.Redis;
 using TelegramService.Api.Services;
 using TelegramService.DataAccess;
 using TelegramService.Domain;
@@ -13,9 +12,7 @@ using TelegramService.TelegramAccess;
 var builder = WebApplication.CreateBuilder(args);
 var config = builder.Configuration;
 
-builder.WebHost.UseUrls(Environment.GetEnvironmentVariable("TELEGRAMSERVICE_SERVER_URL") ?? 
-                        config.GetConnectionString("ServiceUrl") ?? 
-                        "http://localhost:5010");
+builder.WebHost.UseUrls("http://*:5010");
 
 // Add services to the container.
 var services = builder.Services;
@@ -29,8 +26,6 @@ var services = builder.Services;
         .Validate(x => !string.IsNullOrWhiteSpace(x.BotToken))
         .ValidateOnStart();
 
-    // var configR = config.GetSection(nameof(RabbitMqConfiguration)).Get<RabbitMqConfiguration>();
-
     services
         .AddOptions<RabbitMqConfiguration>()
         .Bind(config.GetSection(nameof(RabbitMqConfiguration)));
@@ -41,9 +36,6 @@ var services = builder.Services;
                                      config.GetConnectionString("TelegramBotUrl") ?? 
                                      throw new NavigationException("Need to set url to bot"));
     });
-    services.AddSingleton<IConnectionMultiplexer>(opt => 
-        ConnectionMultiplexer.Connect((Environment.GetEnvironmentVariable("REDISUSERDATA_CONNECTION") ?? 
-                                       builder.Configuration.GetConnectionString("DockerRedisConnection")) ?? string.Empty));
 
     services.AddSerilog(lc => lc
         .WriteTo.Console()
@@ -82,9 +74,12 @@ app.Services.Migrate();
     app.MapPost("/update", async (
             IRegistrationService registrationService,
             ITelegramMessageSender telegramMessageSender,
+            ILogger<RegistrationService> logger,
             [FromBody] TelegramUpdate update) =>
         {
+            logger.LogInformation("TryRegister with message: {Message}", update.Message.Text);
             var messageToUser = await registrationService.TryRegister(update);
+            logger.LogInformation("SendMessage to chat id {ChatId}", update.Message.Chat.Id);
             await telegramMessageSender.SendMessageAsync(update.Message.Chat.Id, messageToUser);
             return StatusCodes.Status200OK;
         })

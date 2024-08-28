@@ -21,32 +21,16 @@ public class RabbitMqSender : IBrokerSender, IDisposable
     {
         _logger = logger;
         
-        // var rabbitMq = new RabbitMqConfiguration()
-        // {
-        //     HostName = Environment.GetEnvironmentVariable("RabbitMQ__HostName"),
-        //     UserName = Environment.GetEnvironmentVariable("RabbitMQ__UserName"),
-        //     Password = Environment.GetEnvironmentVariable("RabbitMQ__Password"),
-        // };
-        
-        // var factory = new ConnectionFactory()
-        // {
-        //     HostName = rabbitMq.HostName,
-        //     UserName = rabbitMq.UserName,
-        //     Password = rabbitMq.Password
-        // };
-        
         var uri = Environment.GetEnvironmentVariable("ConnectionStrings__RabbitMQ");
-        
-        // _logger.LogInformation("Broker uri: {Uri}", uri);
 
         if (uri is null)
         {
             _logger.LogCritical("No uri for telegram rabbitmq");
             throw new Exception("No uri for telegram rabbitmq");
+            // uri = "amqp://guest:guest@localhost:5674/";
         }
         
         var factory = new ConnectionFactory() { Uri = new Uri(uri) };
-        // var factory = new ConnectionFactory() { HostName = "localhost" };
         
         _connection = factory.CreateConnection();
         _channel = _connection.CreateModel();

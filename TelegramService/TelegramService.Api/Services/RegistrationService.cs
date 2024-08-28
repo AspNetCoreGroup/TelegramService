@@ -40,8 +40,7 @@ public class RegistrationService : IRegistrationService
         
         var chatId = update.Message.Chat.Id;
         var messageText = update.Message.Text;
-            
-        // TODO потом удалить логирование
+        
         _logger.LogInformation("Received a message from chat Id: {chatId}, Message: {messageText}", 
             chatId, messageText);
 
